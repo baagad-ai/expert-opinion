@@ -39,9 +39,21 @@ grep -q "role-taxonomy" CONTRIBUTING.md
 
 Human UAT gate: "Would a stranger understand this skill and want to try it within 30 seconds of reading the README?" — this is R007's stated human verification criterion.
 
+## Observability / Diagnostics
+
+The examples and docs in this slice are static markdown artifacts — there is no runtime process. Inspection surfaces are therefore file-based:
+
+- **Content completeness:** `wc -l examples/*/synthesis-output.md` — any synthesis under 30 lines is a stub, not a real example.
+- **Schema compliance:** `grep -l "<overview>" examples/*/synthesis-output.md` — missing tag means the file doesn't conform to the synthesis-doc.md schema.
+- **Contradiction presence:** `grep -l "<contradictions>" examples/*/synthesis-output.md` — should be present in example 02 (business domain has a genuine contradiction) and absent from 01 and 03 (D012: omit empty blocks).
+- **Install command reachability:** `grep "npx skills add" README.md` — the one-command install must be present and correct.
+- **Taxonomy cross-reference:** `grep "role-taxonomy" CONTRIBUTING.md` — CONTRIBUTING.md must reference the taxonomy file.
+
+**Failure visibility:** If a verification step exits non-zero, the failing check identifies which file is missing, undersized, or schema-noncompliant. No structured error format beyond shell exit codes is needed for static-content verification.
+
 ## Tasks
 
-- [ ] **T01: Create 3 worked examples in examples/  (merge role-taxonomy.md, write all 9 example files)** `est:1h`
+- [x] **T01: Create 3 worked examples in examples/  (merge role-taxonomy.md, write all 9 example files)** `est:1h`
   - Why: Examples are written first because README.md will quote from them; the taxonomy must be present on this branch for CONTRIBUTING.md to cross-reference; the 3 examples must span code/business/architecture domains to demonstrate the skill's breadth
   - Files: `examples/01-python-auth-module/input.md`, `examples/01-python-auth-module/roles-proposed.md`, `examples/01-python-auth-module/synthesis-output.md`, `examples/02-saas-pricing-strategy/input.md`, `examples/02-saas-pricing-strategy/roles-proposed.md`, `examples/02-saas-pricing-strategy/synthesis-output.md`, `examples/03-architecture-decision/input.md`, `examples/03-architecture-decision/roles-proposed.md`, `examples/03-architecture-decision/synthesis-output.md`, `references/role-taxonomy.md`
   - Do: (1) Bring in `references/role-taxonomy.md` from the M002 branch: `git checkout milestone/M002 -- references/role-taxonomy.md`. (2) Create `examples/01-python-auth-module/` with a realistic ~60-line Python JWT auth module as `input.md`; a 6–8 role proposal in `roles-proposed.md` (Security Auditor, Performance Engineer, API Designer, Test Coverage Analyst, etc.); a full synthesis document following `templates/synthesis-doc.md` schema in `synthesis-output.md` — include at least 2 cross-cutting findings and a ranked recommendations table with 5+ entries. (3) Create `examples/02-saas-pricing-strategy/` with a realistic 400-word SaaS pricing strategy memo as `input.md`; a 6–8 role proposal in `roles-proposed.md` (Business Strategist, Pricing Analyst, Customer Success, Competitive Intelligence, etc.); full synthesis in `synthesis-output.md`. (4) Create `examples/03-architecture-decision/` with a realistic ADR (Architecture Decision Record) for choosing between a monolith-first vs. microservices-first approach as `input.md`; a 6–8 role proposal in `roles-proposed.md` (Systems Architect, SRE/Reliability Engineer, Security Auditor, Product Manager, etc.); full synthesis in `synthesis-output.md`. All synthesis outputs must follow the XML schema from `templates/synthesis-doc.md` faithfully and demonstrate genuine domain-specific depth — not toy "add more comments" findings.
