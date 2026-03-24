@@ -1,0 +1,131 @@
+# Output Contract: S01 → S02
+
+**Path:** `references/output-contract.md`
+**Status:** Canonical — field names defined here are the authoritative API between S01 (intake) and S02 (research engine). All downstream agents must use these exact names.
+
+---
+
+## Typed Schema
+
+```typescript
+interface IntakeOutputPackage {
+  confirmed_roles: ConfirmedRole[];
+  normalized_input: NormalizedInput;
+  inferred_context: InferredContext;
+}
+
+interface ConfirmedRole {
+  role: string;              // Display name — e.g. "Security Auditor"
+  domain: string;            // Expert's domain — e.g. "application security"
+  focus_questions: string[]; // 2–4 questions specific to THIS artifact (not generic)
+  rationale: string;         // Why this role is relevant to this specific artifact
+}
+
+interface NormalizedInput {
+  type: "text" | "file" | "codebase" | "url";
+  content: string;           // Full text if small; key excerpts if large (see below)
+  summary?: string;          // Present when input was summarized due to size
+  file_tree?: string;        // Present when type == "codebase"; output of `find` or similar
+}
+
+interface InferredContext {
+  purpose: string;           // What the artifact is trying to accomplish
+  domain: string;            // Technical or business domain
+  audience: string;          // Intended consumer of the artifact
+}
+```
+
+---
+
+## Field Definitions
+
+### `confirmed_roles`
+
+Array of expert roles the user confirmed after reviewing the intake proposal.
+
+- **`role`** — Human-readable role name as displayed during the confirmation UX (e.g. `"Security Auditor"`, `"Performance Engineer"`, `"Technical Writer"`). Used as the subagent's identity in S02 dispatch.
+- **`domain`** — The expert's area of specialization in 2–5 words (e.g. `"application security"`, `"distributed systems performance"`, `"REST API design"`). Passed to the subagent as part of its role identity.
+- **`focus_questions`** — Array of 2–4 questions this expert will specifically investigate. Questions must be artifact-specific — generated during intake based on the actual content, not generic role questions. These are the primary driver of expert report depth (K003).
+- **`rationale`** — One sentence explaining why this expert perspective is relevant to this specific artifact. Used in S02 to help subagents understand their scope boundary.
+
+### `normalized_input`
+
+The artifact in a form all S02 subagents can consume directly.
+
+- **`type`** — One of `"text"`, `"file"`, `"codebase"`, or `"url"`. Determined during intake phase 1 (see `references/input-handling.md`).
+- **`content`** — The artifact content. For small inputs: full text. For large inputs: key excerpts with structural markers showing what was omitted. Maximum ~6000 tokens. See `references/input-handling.md` for truncation rules.
+- **`summary`** *(optional)* — Present when `content` is a truncated excerpt. A 3–8 sentence plain-language summary of the full artifact. Allows subagents to reason about parts they don't have verbatim.
+- **`file_tree`** *(optional)* — Present when `type == "codebase"`. Output of a `find` or `ls -R` command showing the directory structure. Gives subagents structural context even when individual files are summarized.
+
+### `inferred_context`
+
+High-level context inferred by the intake workflow from the artifact itself.
+
+- **`purpose`** — What the artifact is trying to accomplish. Concise, specific (e.g. `"REST API for mobile client authentication"`, `"technical specification for a distributed job queue"`). Not a description of what it IS, but what it is FOR.
+- **`domain`** — The technical or business domain the artifact belongs to (e.g. `"backend code"`, `"technical writing"`, `"business strategy"`, `"UI/UX design"`).
+- **`audience`** — Who the artifact is intended for (e.g. `"internal developers"`, `"end users"`, `"investors"`, `"regulatory reviewers"`).
+
+---
+
+## Emission Rules
+
+The intake workflow (`workflows/intake.md`) MUST:
+
+1. Emit this package only after the user has confirmed the role list (phase 5 of intake).
+2. Use these exact field names — S02 dispatch logic references them by name.
+3. Populate all required fields (`confirmed_roles`, `normalized_input`, `inferred_context`). Optional fields (`summary`, `file_tree`) must be present when the input size triggers truncation or when type is `"codebase"`.
+4. Emit as a structured markdown code block (language tag: `json` or `yaml`) so downstream agents can parse it reliably.
+
+## Consumption Rules
+
+S02 subagent dispatch MUST:
+
+1. Read `confirmed_roles` to determine which subagents to spin up and what identity/focus each receives.
+2. Pass `normalized_input.content` (and `summary` if present) to each subagent as the artifact to review.
+3. Pass `inferred_context` to help subagents calibrate their analysis depth and framing.
+4. Pass the relevant `focus_questions` from the matched role entry to the subagent (not the full array — only that role's questions).
+
+---
+
+## S02 → S03 Output Contract
+
+**Status:** Canonical — field names defined here are the authoritative API between S02 (research engine) and S03 (synthesis). All downstream agents must use these exact names.
+
+```typescript
+interface ResearchOutputPackage {
+  reports: ExpertReport[];
+  metadata: ResearchMetadata;
+}
+
+interface ExpertReport {
+  role: string;              // matches ConfirmedRole.role exactly
+  domain: string;            // matches ConfirmedRole.domain exactly
+  report: string;            // full text of the completed expert-report.md template
+  missing_sections: string[]; // empty array [] if all required sections present;
+                              // else names of missing sections (e.g. ["<findings>", "<recommendations>"])
+}
+
+interface ResearchMetadata {
+  total_roles: number;       // count of confirmed_roles dispatched
+  completed_roles: number;   // count of subagents that returned output (may differ if one failed)
+  inferred_context: InferredContext; // passed through verbatim from IntakeOutputPackage
+}
+```
+
+### Emission Rules
+
+`workflows/research.md` MUST:
+
+1. **Collect ALL parallel outputs before emitting.** Do not emit a partial `ResearchOutputPackage` while any subagent is still running.
+2. **Emit verbatim — do NOT repair missing sections.** If a subagent returns a report with `<recommendations>` absent, record `"<recommendations>"` in `missing_sections` and include the raw report in `report`. S03 decides how to handle incomplete reports.
+3. **Include `inferred_context` pass-through.** Copy `IntakeOutputPackage.inferred_context` into `ResearchMetadata.inferred_context` unchanged — S03 uses it to frame the synthesis.
+4. **Set `completed_roles` to the count of subagents that returned any output** (even partial). If a subagent fails entirely and returns nothing, exclude it from `reports` and decrement `completed_roles` accordingly; the discrepancy between `total_roles` and `completed_roles` signals the failure to S03.
+5. **Emit as a structured markdown code block** (language tag: `json` or `yaml`) so S03 can parse it reliably.
+
+### Field Definitions
+
+- **`reports`** — Array ordered to match `confirmed_roles` order from `IntakeOutputPackage`. One entry per dispatched subagent.
+- **`ExpertReport.role`** — Must match `ConfirmedRole.role` exactly (case-sensitive). S03 uses this for display and attribution.
+- **`ExpertReport.report`** — The raw string returned by the subagent after filling `templates/expert-report.md`. Includes all XML tags and content.
+- **`ExpertReport.missing_sections`** — Section names that should be present per `templates/expert-report.md` but were absent in the returned report. Required sections: `<role_identity>`, `<executive_summary>`, `<findings>`, `<recommendations>`. `<open_questions>` is optional.
+- **`ResearchMetadata.inferred_context`** — Type `InferredContext` as defined in the S01→S02 schema above. Passed through unchanged; S03 uses `purpose`, `domain`, and `audience` to frame the synthesis introduction.
