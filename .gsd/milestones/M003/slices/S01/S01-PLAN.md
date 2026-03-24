@@ -60,7 +60,7 @@ The examples and docs in this slice are static markdown artifacts — there is n
   - Verify: `ls examples/01-python-auth-module/synthesis-output.md examples/02-saas-pricing-strategy/synthesis-output.md examples/03-architecture-decision/synthesis-output.md && wc -l examples/*/synthesis-output.md | awk '/total/ {exit ($1 >= 100) ? 0 : 1}'`
   - Done when: All 9 example files exist and synthesis outputs each have ≥30 lines of substantive content following the synthesis-doc.md schema
 
-- [ ] **T02: Write README.md and CONTRIBUTING.md** `est:45m`
+- [x] **T02: Write README.md and CONTRIBUTING.md** `est:45m`
   - Why: README is the public face of the skill and the primary deliverable for R007; CONTRIBUTING.md explains how to extend the taxonomy; both depend on the examples written in T01
   - Files: `README.md`, `CONTRIBUTING.md`
   - Do: (1) Write `README.md` at project root with: one-line pitch, 2–3 sentence elevator pitch paragraph, install section with exactly `npx skills add baagad-ai/expert-opinion -g -y` as the one-command install, usage section describing the three-phase flow (/expert-opinion → propose roles → parallel research → synthesis), three worked example snippets (link to each examples/ subdirectory and inline a brief excerpt from each synthesis-output.md), and a brief "What it produces" section showing the synthesis document schema. (2) Write `CONTRIBUTING.md` with: how to add a role to the taxonomy (cross-reference `references/role-taxonomy.md`'s `## Extending the Taxonomy` section — do NOT duplicate the template, just link/reference it), fork → branch → PR workflow, and a brief code of conduct. README must not require any additional API keys or multi-step setup.
