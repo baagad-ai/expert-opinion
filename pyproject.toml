@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "expert-opinion"
-version = "0.1.0"
+version = "1.0.0"
 description = "Multi-expert parallel review GSD skill"
 authors = ["baagad-ai"]
 readme = "README.md"
