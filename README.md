@@ -2,27 +2,49 @@
 
 # expert-opinion
 
-**Multi-expert parallel review for any artifact.**
+**Stop asking one person to review everything.**
 
-Submit code, docs, architecture plans, or a URL. A panel of domain experts reviews it in parallel — each grounded in evidence, each focused on a different lens — and the findings are synthesized into one ranked audit document.
+Submit any artifact. Get a panel of domain experts arguing about it in parallel. Read one synthesis document that tells you exactly what's broken, why it matters, and what to fix first.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/baagad-ai/expert-opinion/releases/tag/v1.0.0)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Install with skills](https://img.shields.io/badge/skills.sh-expert--opinion-6366f1?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0tMiAxNWwtNS01IDEuNDEtMS40MUwxMCAxNC4xN2w3LjU5LTcuNTlMMTkgOGwtOSA5eiIvPjwvc3ZnPg==)](https://skills.sh/baagad-ai/expert-opinion)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)](https://github.com/baagad-ai/expert-opinion/releases/tag/v1.0.0)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](CONTRIBUTING.md)
 
 </div>
 
 ---
 
-## What makes it different
+## Why this exists
 
-Most review tools give you a single perspective. This one gives you five to ten, all running at the same time.
+A Python auth module isn't just a security problem. It's a security problem *and* a cryptography problem *and* a test-coverage problem — and the cross-cutting findings that span all three lenses are usually the ones that would've caused an incident.
 
-- **Parallel** — every expert runs as a separate subagent concurrently. No sequential bottleneck.
-- **Grounded** — every finding must cite a specific line, quote, or concrete observation. No surface-level feedback.
-- **Synthesized** — the final document surfaces cross-cutting signals, resolves contradictions between experts, and ranks recommendations by impact.
-- **Confirmed** — you see the proposed expert panel and approve it before any review begins.
-- **Skill-aware** — for directories containing `SKILL.md`, a specialized audit pipeline runs with a 5-dimension maturity scorecard.
+Most reviews give you one perspective because that's what fits in one context window. This skill gives you five to ten, all running at the same time, none aware of each other's conclusions. Then it synthesizes them.
+
+- **Parallel** — every expert runs as an isolated subagent concurrently. No bottleneck.
+- **Grounded** — every finding must cite a specific line, quote, or observation. No vibes.
+- **Synthesized** — the final document surfaces cross-cutting signals (same root cause flagged by multiple experts independently), resolves contradictions, and ranks recommendations by impact × effort.
+- **Confirmed** — you see the proposed expert panel before anything runs. Add roles, swap them out, or cancel. Zero cost incurred until you say go.
+- **Skill-aware** — point it at a directory with `SKILL.md` and it switches to a dedicated audit pipeline with a 5-dimension maturity scorecard.
+
+---
+
+## Install
+
+```bash
+npx skills add baagad-ai/expert-opinion -g -y
+```
+
+No API keys. No config. Works with Claude Code and [40+ other agents](https://skills.sh).
+
+**Manual install (Claude Code):**
+```bash
+# Global — available in all your projects
+cp -r expert-opinion/ ~/.claude/skills/expert-opinion/
+
+# Project-local
+cp -r expert-opinion/ .claude/skills/expert-opinion/
+```
 
 ---
 
@@ -39,10 +61,11 @@ You provide an artifact
   └───────────────────┬─────────────────────────┘
                       │
               You confirm the panel
+              (add, remove, or cancel)
                       │
         ┌─────────────┼─────────────┐
         ▼             ▼             ▼
-   [Expert 1]    [Expert 2]   [Expert N]   ← parallel subagents
+   [Expert 1]    [Expert 2]   [Expert N]   ← parallel, isolated
    evidence-     evidence-    evidence-
    grounded      grounded     grounded
         │             │             │
@@ -66,87 +89,108 @@ You provide an artifact
 # Review a local file
 /expert-opinion ./src/auth/handler.py
 
-# Review a URL
-/expert-opinion https://example.com/my-api-spec.yaml
+# Review from a URL
+/expert-opinion https://example.com/api-spec.yaml
 
-# Paste inline content
+# Paste inline — just run the command and paste
 /expert-opinion
-> <paste your document, code, or proposal here>
 
-# Review a codebase directory
+# Review a whole directory
 /expert-opinion ./my-project/
 
-# Audit a skill directory
+# Audit a skill (triggers the dedicated skill pipeline)
 /expert-opinion ./my-skill/
 ```
 
-The skill will:
-1. Detect the input type and normalize the artifact
-2. Propose a panel of 5–10 domain experts specific to your artifact
-3. Ask you to confirm, edit, or cancel the panel
-4. Dispatch each expert in parallel (one subagent per role)
-5. Synthesize findings into a single audit document saved as `expert-opinion-YYYY-MM-DD-HHmm.md`
-
 ---
 
-## Example output
+## Real examples
 
-A representative synthesis excerpt (Python JWT auth module review):
+Three worked examples live in [`examples/`](examples/). Here's what the output actually looks like.
+
+### Python JWT Auth Module → 7 experts, critical risk
 
 ```xml
 <overview>
 artifact: "Python JWT authentication module (auth/jwt_handler.py, ~60 LOC, API gateway auth layer)"
-scope: "Security posture, cryptographic correctness, API surface safety, performance resilience,
-        test coverage, secrets hygiene, documentation adequacy"
-experts_consulted: "Security Auditor, Cryptography Specialist, API Designer, Performance Engineer,
-                    Test Coverage Analyst, DevSecOps Engineer, Documentation Reviewer"
-review_date: "2026-01-15"
 overall_risk: "critical"
 one_line_verdict: "This module has a hardcoded HS256 secret and no token expiry enforcement —
-                   any token issued is permanently valid and the secret is almost certainly
-                   already in version-control history."
+  any token issued is permanently valid and the secret is almost certainly already in
+  version-control history."
 </overview>
 ```
 
-**Top 3 recommendations from that run:**
-
 | Rank | Recommendation | Source | Effort | Impact |
 |------|----------------|--------|--------|--------|
-| 1 | Replace hardcoded `SECRET_KEY` with `os.environ["JWT_SECRET_KEY"]`; raise at import if absent; add `detect-secrets` to CI | DevSecOps:F1, Security:X1 | low | Eliminates permanent credential exposure in VCS and container images |
+| 1 | Replace hardcoded `SECRET_KEY` with env var; raise at import if absent; add `detect-secrets` to CI | DevSecOps:F1, Security:X1 | low | Eliminates permanent credential exposure |
 | 2 | Add `exp` claim to `create_token`; reject tokens missing `exp` explicitly | Crypto:F1, Security:X2 | low | Bounds blast radius of any token theft to the TTL window |
-| 3 | Remove or gate the public `POST /auth/verify` endpoint; rate-limit; strip `claims` from response | API:F1, Perf:F1, Security:X3 | medium | Eliminates oracle + DoS surface; stops leaking user payload to anonymous callers |
+| 3 | Remove or gate the public `POST /auth/verify` endpoint; rate-limit; strip `claims` | API:F1, Perf:F1, Security:X3 | medium | Eliminates oracle + DoS surface |
 
-> Cross-cutting findings (like `Security:X1` above) are observations where two or more independent experts flagged the same root cause without coordinating. These rank above equal-severity single-expert findings.
+> `Security:X1` notation means it's a cross-cutting finding — flagged independently by 2+ experts. These outrank equal-severity single-expert findings.
+
+→ [Full example output](examples/01-python-auth-module/synthesis-output.md)
 
 ---
 
-## Installation
+### SaaS Pricing Memo → surfaced a disagreement the author glossed over
 
-Copy the skill directory to wherever your agentic platform loads skills from.
-
-**Claude Code:**
-```bash
-# User-level (available in all projects)
-cp -r expert-opinion/ ~/.claude/skills/expert-opinion/
-
-# Or project-level (available in this project only)
-cp -r expert-opinion/ .claude/skills/expert-opinion/
+```xml
+<overview>
+artifact: "SaaS pricing strategy memo — Vantara Analytics Q2 pricing overhaul"
+overall_risk: "medium"
+one_line_verdict: "The three-tier structure is directionally sound, but the free-tier sunset
+  timeline is dangerously compressed and the seat-based vs. usage-based debate is
+  unresolved — both need answers before launch."
+</overview>
 ```
 
-**Other platforms:** place the directory where your agent discovers skills, then reference it as `expert-opinion`.
+→ [Full example output](examples/02-saas-pricing-strategy/synthesis-output.md)
+
+---
+
+### Architecture ADR → confirmed the decision, then identified what it was missing
+
+```xml
+<overview>
+artifact: "ADR-001 — Yardhop marketplace initial service architecture"
+overall_risk: "low"
+one_line_verdict: "Monolith-first is the correct call, but the ADR is dangerously thin on
+  the data migration path and the observability instrumentation needed to detect
+  problems before they become outages."
+</overview>
+```
+
+→ [Full example output](examples/03-architecture-decision/synthesis-output.md)
+
+---
+
+## What the output document contains
+
+| Section | What's in it |
+|---------|-------------|
+| `<overview>` | Artifact description, scope, experts consulted, risk level, one-line verdict |
+| `<per_role_highlights>` | Per-expert table: 1-sentence finding + highest severity |
+| `<cross_cutting_findings>` | Root causes flagged by 2+ experts independently — the most actionable section |
+| `<contradictions>` | Where experts genuinely disagreed and how it was resolved (omitted if none) |
+| `<prioritized_recommendations>` | Ranked action table: recommendation, source roles, effort, impact |
+| `<open_questions>` | Things the team needs to answer before acting |
+
+The `<cross_cutting_findings>` section is the whole point. An issue that three independent reviewers converged on without coordinating is a different class of problem than one any single expert would catch.
 
 ---
 
 ## Security model
 
-- **Input isolation** — URL and file content is wrapped in `<artifact_data>` boundary tags before being passed to subagents. Any instructions embedded in submitted content are treated as artifact text, not as commands.
-- **Pre-approved queries only** — research queries are generated from artifact metadata *before* artifact content is loaded. Subagents receive only pre-approved queries; they cannot derive new searches from the content they are reviewing.
-- **Subagent scope restriction** — subagents are restricted to in-context analysis and their pre-approved queries. They cannot dispatch further subagents or call arbitrary external services.
-- **Confirmation gate** — no expert research begins until you approve the proposed panel. You can add, remove, or cancel any role before any cost is incurred.
+The skill is designed to be safe to run on untrusted content.
+
+- **Input isolation** — fetched URLs and files are wrapped in `<artifact_data>` boundary tags before reaching subagents. Instructions embedded in submitted content are treated as artifact text, not commands.
+- **Pre-approved queries only** — any web searches are derived from artifact *metadata* before the content is loaded. Subagents can't generate new queries from what they're reviewing.
+- **Subagent scope restriction** — each expert is isolated. No subagent can spawn further subagents or make arbitrary external calls.
+- **Confirmation gate** — the expert panel is shown to you before dispatch. Nothing runs (and no cost is incurred) until you approve.
 
 ---
 
-## Files
+## What's in the repo
 
 ```
 SKILL.md                     — router + essential principles
@@ -156,8 +200,8 @@ workflows/
   synthesis.md               — convergence, contradiction, ranked output
   audit-skill.md             — skill audit pipeline (S01 → S02 → S03)
 references/
-  output-contract.md         — S01↔S02 and S02↔S03 typed schemas (schema v1.0)
-  skill-audit-contract.md    — skill audit typed schemas (schema v1.0)
+  output-contract.md         — typed schemas for the S01→S02→S03 pipeline
+  skill-audit-contract.md    — typed schemas for the skill audit pipeline
   input-handling.md          — input type detection and normalization rules
   subagent-prompt.md         — expert subagent task template
   skill-audit-roles.md       — expert role taxonomy for skill audits
@@ -167,18 +211,22 @@ templates/
   skill-audit-doc.md         — skill audit document template
   skill-expert-report.md     — per-expert template for skill audits
   role-proposal.md           — role proposal display format
+examples/
+  01-python-auth-module/     — code review: JWT auth handler
+  02-saas-pricing-strategy/  — business review: pricing memo
+  03-architecture-decision/  — architecture review: ADR
 ```
 
 ---
 
 ## Contributing
 
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Ideas for contributions:
+Things that would make this better:
 - New expert role definitions in `references/skill-audit-roles.md`
-- Example artifacts and their review outputs
-- Input type support (new normalization strategies)
+- More worked examples with real artifacts
+- Input normalization support for new types (Jupyter notebooks, OpenAPI specs, etc.)
 - Bug reports with reproducible inputs
 
 ---
