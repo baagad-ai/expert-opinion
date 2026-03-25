@@ -2,10 +2,10 @@
 name: expert-opinion
 description: >
   Use when you want multi-expert parallel review of any artifact — code, documents,
-  architecture plans, business proposals, GSD skills, or any URL. Proposes expert
+  architecture plans, business proposals, agentic skills, or any URL. Proposes expert
   perspectives specific to the submitted artifact, gates on confirmation, runs each
   expert in a parallel subagent, then synthesizes findings into a prioritized audit
-  document. For GSD skill artifacts, runs a dedicated skill audit pipeline with
+  document. For skill artifacts (directories containing SKILL.md), runs a dedicated skill audit pipeline with
   structural pre-validation, maturity scorecard, and phased remediation plan.
 ---
 
@@ -36,7 +36,7 @@ description: >
   </no_web_search_in_intake>
 
   <skill_audit_specialization>
-    When the artifact is a GSD skill directory (contains SKILL.md), route to
+    When the artifact is a skill directory (contains SKILL.md), route to
     workflows/audit-skill.md — NOT to workflows/intake.md. The skill audit pipeline
     has its own role taxonomy (references/skill-audit-roles.md), structural pre-validation,
     maturity scorecard, and phased remediation plan that general intake cannot provide.
@@ -59,8 +59,8 @@ description: >
   **For general artifacts** (code, documents, architecture, proposals, URLs):
   Provide a file path, directory path, URL, or paste content directly.
 
-  **For skill audits** (GSD SKILL.md or skill directory):
-  Provide the skill directory path (e.g. `./my-skill/` or `~/.gsd/agent/skills/my-skill/`)
+  **For skill audits** (SKILL.md or skill directory):
+  Provide the skill directory path (e.g. `./my-skill/` or `~/.claude/skills/my-skill/`)
   or the skill name (e.g. `expert-opinion`).
   The skill audit pipeline runs structural pre-validation, a specialized expert panel
   drawn from prompt engineering and agentic workflow domains, produces a maturity scorecard
@@ -83,7 +83,7 @@ description: >
   **Step 1 — Skill audit route:**
   If, after Step 0, the input:
     - Refers to a directory containing SKILL.md, or
-    - Is a bare word matching a known skill name (resolved via `~/.gsd/agent/skills/{name}/` etc.), or
+    - Is a bare word matching a known skill name (resolved via `~/.claude/skills/{name}/`, `~/.agents/skills/{name}/`, etc.), or
     - User says "audit this skill", "review this skill", "check this skill"
     → Route: skill_audit → `workflows/audit-skill.md`
 
@@ -91,6 +91,6 @@ description: >
   → Route: intake → `workflows/intake.md`
 
   **Ambiguity:** If a path could be a skill directory or a general codebase:
-  Ask: "Is this a GSD skill directory or a general codebase?"
+  Ask: "Is this a skill directory or a general codebase?"
   Then route based on the answer.
 </routing_decision>

@@ -9,7 +9,7 @@ description: >
 
 # Skill Audit Role Taxonomy
 
-Expert roles for auditing GSD skills, agent workflows, and prompt engineering artifacts.
+Expert roles for auditing agentic skills, agent workflows, and prompt engineering artifacts.
 Each role investigates a distinct quality dimension. Together they cover the full surface
 area of a skill from first principles to enterprise readiness.
 
@@ -40,8 +40,8 @@ Trigger conditions:
 - Any workflow file that contains conditional logic or branching
 Reference standards:
 - Anthropic prompting best practices (clarity, directness, XML structure)
-- GSD K001 (no markdown headings in skill body) and K002 (SKILL.md ≤ 500 lines)
-- GSD SKILL.md template structure: essential_principles, intake, routing blocks
+- K001 (no markdown headings in skill body) and K002 (SKILL.md ≤ 500 lines)
+- SKILL.md template structure: essential_principles, intake, routing blocks
 
 **Cognitive Load Analyst**
 Domain: agent cognitive efficiency and context management
@@ -57,7 +57,7 @@ Trigger conditions:
 - Skill has 3+ workflow files
 - Skill uses `<required_reading>` blocks (check for over-loading)
 Reference standards:
-- GSD K002: SKILL.md ≤ 500 lines total
+- K002: SKILL.md ≤ 500 lines total
 - Context window economics: each loaded reference file costs tokens the agent could spend reasoning
 - Progressive disclosure principle: load only what the current phase needs
 
@@ -74,7 +74,7 @@ Trigger conditions:
 - Any skill intended for external or team use (always applicable)
 - Skills with more than one workflow (cross-file navigation becomes important)
 Reference standards:
-- GSD SKILL.md template: description field must state both what AND when to use
+- SKILL.md template: description field must state both what AND when to use
 - Diátaxis documentation framework (tutorials, how-to guides, reference, explanation)
 
 ---
@@ -97,10 +97,10 @@ Trigger conditions:
 - Skill contains any workflow file (always trigger if workflows/ exists)
 - Skill dispatches subagents (parallel vs. sequential correctness is critical)
 Reference standards:
-- GSD K003: every subagent must receive role identity + full input + focus questions + output template
-- GSD P002: fan-out parallel dispatch; orchestrator synthesizes; subagents never communicate
-- GSD P003: user confirmation gate before expensive operations
-- GSD P004: required_reading block at workflow top
+- K003: every subagent must receive role identity + full input + focus questions + output template
+- P002: fan-out parallel dispatch; orchestrator synthesizes; subagents never communicate
+- P003: user confirmation gate before expensive operations
+- P004: required_reading block at workflow top
 
 **Output Contract Reviewer**
 Domain: API design and schema contracts between agent phases
@@ -115,7 +115,7 @@ Trigger conditions:
 - Skill has any inter-phase handoff (output contract files, typed schemas)
 - Skill dispatches subagents whose output feeds into a synthesis phase
 Reference standards:
-- GSD output-contract.md pattern: typed TypeScript interface + emission rules + consumption rules
+- output-contract.md pattern: typed TypeScript interface + emission rules + consumption rules
 - API design principle: consumers should fail loudly on schema violations (flag-not-repair)
 
 ---
@@ -141,7 +141,7 @@ Trigger conditions:
 - Skill calls web_search, fetch_page, or any external service
 Reference standards:
 - OWASP Top 10 for LLM Applications (LLM01: Prompt Injection, LLM09: Overreliance)
-- GSD hard rules: never take outward-facing actions without explicit user confirmation
+- Hard rule: never take outward-facing actions without explicit user confirmation
 - Principle of least privilege: each phase and subagent gets only the context it needs
 
 ---
@@ -164,9 +164,9 @@ Trigger conditions:
 - Any skill with multi-phase workflows (always applicable)
 - Skills with branching or conditional logic (edge cases multiply at each branch)
 Reference standards:
-- GSD: work is not done when the code compiles — work is done when verification passes
+- Work is not done when the code compiles — work is done when verification passes
 - Error message standard: errors must include phase context, what was expected, and how to fix
-- GSD FAIL-FAST pattern: validate at phase entry, not mid-phase
+- FAIL-FAST pattern: validate at phase entry, not mid-phase
 
 ---
 
@@ -191,8 +191,8 @@ Trigger conditions:
 - Skill produces persistent artifacts (output files, database writes)
 - Skill calls external services or handles sensitive data
 Reference standards:
-- GSD observability principle: structured logs with phase + error context + recovery path
-- GSD agent-first observability: health surfaces, last-error persistence, happy path + diagnostic
+- Observability principle: structured logs with phase + error context + recovery path
+- Agent-first observability: health surfaces, last-error persistence, happy path + diagnostic
 - Semantic versioning for skill files (version field in YAML frontmatter)
 
 ---

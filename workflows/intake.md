@@ -1,6 +1,7 @@
 <required_reading>
   references/input-handling.md — detection rules and normalization steps for all four input types
   references/output-contract.md — canonical schema for the S01 → S02 output package; use exact field names
+  templates/role-proposal.md — role proposal display format used in Phase 4
 </required_reading>
 
 <workflow name="intake" version="1.0">
