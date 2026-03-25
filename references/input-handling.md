@@ -12,7 +12,7 @@ Determine input type by examining what the user submitted. Apply rules in order;
 | Type | Detection Condition | Examples |
 |------|---------------------|---------|
 | `url` | Starts with `http://` or `https://` | `https://example.com/docs` |
-| `file` | Starts with `/`, `./`, or `../`; OR contains a file extension (`.py`, `.md`, `.json`, etc.); AND refers to a single file, not a directory | `./src/auth.py`, `/home/user/report.md`, `config.yaml` |
+| `file` | Starts with `/`, `./`, or `../`; OR the input **ends with** a recognized file extension (`.py`, `.md`, `.json`, `.yaml`, `.toml`, `.ts`, `.js`, `.go`, `.rs`, `.rb`, `.sh`, etc.) — the extension must be the final token; a dot in the middle of inline text (e.g. `user.hash`) does NOT qualify; AND refers to a single file, not a directory | `./src/auth.py`, `/home/user/report.md`, `config.yaml` |
 | `codebase` | Is a directory path (ends with `/`, or path exists and `bash` confirms it's a directory); OR user explicitly says "this is a codebase" / "this is a project" | `./my-project/`, `/home/user/repo` |
 | `text` | Everything else — inline text with no path separators, no URL prefix, no file extension pattern | Pasted prose, code snippet, raw content |
 
@@ -37,7 +37,19 @@ Determine input type by examining what the user submitted. Apply rules in order;
 
 ### `codebase` — Directory / project
 
-1. Use `bash` with `find [path] -type f | sort` to enumerate all files. Capture as `file_tree`.
+1. Use `bash` with the following command to enumerate files, excluding generated/binary directories:
+   ```bash
+   find [path] -type f \
+     -not -path '*/.git/*' \
+     -not -path '*/node_modules/*' \
+     -not -path '*/__pycache__/*' \
+     -not -path '*/vendor/*' \
+     -not -path '*/.venv/*' \
+     -not -path '*/dist/*' \
+     -not -path '*/build/*' \
+     | sort
+   ```
+   Capture the output as `file_tree`. During the file selection step (step 2), additionally skip any file that appears to be binary (e.g., `.wasm`, `.png`, `.jpg`, `.lock` files with no readable structure).
 2. From the file list, select up to **20 representative files** using this priority order:
    - README files (any extension)
    - Entry points: `main.*`, `index.*`, `app.*`, `server.*`, `__init__.py`, `__main__.py`
@@ -54,8 +66,10 @@ Determine input type by examining what the user submitted. Apply rules in order;
 
 1. Use the `fetch_page` tool with the URL. Default `maxChars = 8000`.
 2. **URL failure fallback:** If the fetched content is fewer than 200 words:
+   - Track `url_retry_count` (starting at 0 on the first fetch; increment on each re-prompt).
    - Warn: "The fetched page returned very little content (< 200 words). This may be a login-gated page, a redirect, or a dynamic SPA. Please paste the relevant content directly or provide a different URL."
    - Re-prompt for input. Do NOT proceed with an empty or near-empty artifact.
+   - **Retry limit:** If the same URL (normalized: lowercase, stripped of trailing slash) is submitted again and `url_retry_count >= 2`, output: "This URL has been rejected {url_retry_count} times. Continuing with the same URL will produce the same result. Please paste the page content directly instead." and STOP — do not re-prompt again.
 3. If content exceeds ~6000 tokens, apply truncation strategy.
 4. Set `normalized_input.type = "url"`, `normalized_input.content = <fetched content or truncated excerpt>`.
 

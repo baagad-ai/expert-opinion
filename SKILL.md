@@ -1,12 +1,12 @@
 ---
 name: expert-opinion
 description: >
-  Multi-expert parallel review for any artifact — code, documents, architecture plans,
-  business proposals, or any URL. Proposes 5–10 specialist perspectives, gates on your
-  confirmation, runs each expert in a parallel subagent, then synthesizes findings into
-  a prioritized audit document.
-version: 0.1.0
-author: GSD
+  Use when you want multi-expert parallel review of any artifact — code, documents,
+  architecture plans, business proposals, GSD skills, or any URL. Proposes expert
+  perspectives specific to the submitted artifact, gates on confirmation, runs each
+  expert in a parallel subagent, then synthesizes findings into a prioritized audit
+  document. For GSD skill artifacts, runs a dedicated skill audit pipeline with
+  structural pre-validation, maturity scorecard, and phased remediation plan.
 ---
 
 <essential_principles>
@@ -34,43 +34,63 @@ author: GSD
     No web searches during intake. fetch_page is permitted only to read a submitted URL
     (the artifact itself) — never for supplementary research or role selection.
   </no_web_search_in_intake>
+
+  <skill_audit_specialization>
+    When the artifact is a GSD skill directory (contains SKILL.md), route to
+    workflows/audit-skill.md — NOT to workflows/intake.md. The skill audit pipeline
+    has its own role taxonomy (references/skill-audit-roles.md), structural pre-validation,
+    maturity scorecard, and phased remediation plan that general intake cannot provide.
+    Role selection for skill audits uses the Role Selection Heuristics table in
+    references/skill-audit-roles.md, not general domain inference.
+  </skill_audit_specialization>
+
+  <synthesis_is_not_concatenation>
+    The synthesis phase MUST perform a full pre-synthesis analysis pass (convergence scan,
+    contradiction scan, severity aggregation, maturity scoring, open questions merge)
+    before filling any template section. Filling template sections while simultaneously
+    scanning produces incoherent output (L007). Complete the analysis pass first; hold
+    all results in working state; then do a single-pass template fill.
+  </synthesis_is_not_concatenation>
 </essential_principles>
 
 <intake>
-  What artifact or topic would you like expert review of? You can provide:
+  What would you like expert review of?
 
-  - A file path (e.g. `./src/auth.py`, `./README.md`)
-  - A directory / codebase path (e.g. `./my-project/`)
-  - A URL (e.g. `https://example.com/spec`)
-  - Inline text or a pasted code snippet
+  **For general artifacts** (code, documents, architecture, proposals, URLs):
+  Provide a file path, directory path, URL, or paste content directly.
 
-  Paste or describe your input and I will detect its type, normalize it, propose
-  relevant expert perspectives, and run parallel reviews after your confirmation.
+  **For skill audits** (GSD SKILL.md or skill directory):
+  Provide the skill directory path (e.g. `./my-skill/` or `~/.gsd/agent/skills/my-skill/`)
+  or the skill name (e.g. `expert-opinion`).
+  The skill audit pipeline runs structural pre-validation, a specialized expert panel
+  drawn from prompt engineering and agentic workflow domains, produces a maturity scorecard
+  (1–5 across 5 dimensions), and delivers a phased remediation plan.
 </intake>
 
-<routing>
-  <route id="intake" trigger="new_request">
-    <description>
-      User provides an artifact or topic for expert review. Covers all input types:
-      text, file, codebase, and URL.
-    </description>
-    <workflow>workflows/intake.md</workflow>
-    <phases>detect → normalize → infer → propose → confirm → emit</phases>
-  </route>
+<routing_decision>
+  When the user provides input, determine the route BEFORE loading any workflow or
+  required-reading files. Apply these steps in order:
 
-  <route id="research" trigger="output_package_ready">
-    <description>Parallel expert research. Dispatches one subagent per confirmed role using parallel mode. Collects structured expert reports for synthesis.</description>
-    <workflow>workflows/research.md</workflow>
-    <phases>receive → construct → dispatch → collect</phases>
-  </route>
+  **Step 0 — SKILL.md pre-check (for potential skill-audit routes only):**
+  If the input looks like a directory path (ends with `/`, is a bare word, or user says
+  "audit this skill"):
+    Run: `bash find {skill_path} -maxdepth 1 -name "SKILL.md" | head -1`
+    (where `{skill_path}` is the path provided by the user — substitute before executing)
+    - If SKILL.md found → continue to Step 1.
+    - If SKILL.md NOT found → route to intake (Step 2) immediately.
+      Do NOT load any `audit-skill.md` required-reading files.
 
-  <route id="synthesis" trigger="all_reports_collected">
-    <description>
-      Synthesizes collected expert reports into a prioritized audit document.
-      Identifies convergent findings, surfaces contradictions, and emits a ranked
-      recommendation table. Saves output to expert-opinion-{YYYY-MM-DD-HHmm}.md.
-    </description>
-    <workflow>workflows/synthesis.md</workflow>
-    <phases>receive → analyze → synthesize → deliver</phases>
-  </route>
-</routing>
+  **Step 1 — Skill audit route:**
+  If, after Step 0, the input:
+    - Refers to a directory containing SKILL.md, or
+    - Is a bare word matching a known skill name (resolved via `~/.gsd/agent/skills/{name}/` etc.), or
+    - User says "audit this skill", "review this skill", "check this skill"
+    → Route: skill_audit → `workflows/audit-skill.md`
+
+  **Step 2 — General artifact route (everything else):**
+  → Route: intake → `workflows/intake.md`
+
+  **Ambiguity:** If a path could be a skill directory or a general codebase:
+  Ask: "Is this a GSD skill directory or a general codebase?"
+  Then route based on the answer.
+</routing_decision>

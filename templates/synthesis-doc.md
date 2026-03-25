@@ -97,3 +97,31 @@ resolution: "[Which view the synthesis adopts and why, OR 'unresolved — needs 
 
 <!-- If no open questions remain, write: "No open questions." -->
 </open_questions>
+
+<remediation_plan>
+<!-- Phased fix schedule derived from <prioritized_recommendations>.
+     Phase 1 = critical findings; must fix before any broader use or sharing.
+     Phase 2 = major findings; fix before v1.0 / production rollout.
+     Phase 3 = minor findings + polish; fix when convenient.
+     Phase 4 = informational + ongoing monitoring items.
+     Omit any phase that has no items. -->
+
+**Phase 1 — Blockers (fix before sharing or broader use)**
+- [ ] [Rank 1 recommendation — from <prioritized_recommendations>]
+- [ ] [Rank 2 recommendation if critical]
+
+*Estimated effort: [X hours / days]*
+
+**Phase 2 — Quality (fix before v1.0)**
+- [ ] [Major finding fixes]
+
+*Estimated effort: [X hours / days]*
+
+**Phase 3 — Polish (fix when convenient)**
+- [ ] [Minor finding fixes]
+
+*Estimated effort: [half day / 1 day]*
+
+**Phase 4 — Ongoing**
+- [ ] [Informational and monitoring items]
+</remediation_plan>

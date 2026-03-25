@@ -29,8 +29,14 @@ Accept the `ResearchOutputPackage` JSON block emitted at the end of `workflows/r
      Re-run the research workflow to produce a valid package before continuing."
 
 2. `metadata.completed_roles` vs `metadata.total_roles`:
-   - If `completed_roles < total_roles` → do NOT halt. Output:
-     "WARNING: Only [completed_roles] of [total_roles] roles completed. Proceeding with available reports."
+   - If `completed_roles == 0` → STOP. Output:
+     "ERROR (synthesis/phase-1): No expert reports returned (completed_roles = 0). Re-run the research workflow or use the partial-retry procedure to recover failed roles before synthesizing."
+   - If `completed_roles < total_roles` AND `completed_roles / total_roles < 0.5`:
+     → STOP. Output:
+     "ERROR (synthesis/phase-1): Only [completed_roles] of [total_roles] expert roles completed — fewer than half the expected analysis is available. Proceeding would produce an unreliable synthesis document. Use the partial-retry procedure in research.md Phase 4 to recover failed roles, then re-run synthesis."
+   - If `completed_roles < total_roles` AND `completed_roles / total_roles >= 0.5`:
+     → do NOT halt. Output:
+     "WARNING (synthesis/phase-1): Only [completed_roles] of [total_roles] roles completed. Proceeding with available reports. Synthesis may be incomplete — consider recovering failed roles via partial re-dispatch."
    - Then continue to Phase 2.
 
 3. Collect `incomplete_roles`: loop over `reports`; for each report where `missing_sections`
@@ -233,6 +239,18 @@ If `merged_open_questions` is empty:
   Write: "No open questions."
 </fill_open_questions>
 
+<!-- REMEDIATION PLAN -->
+<fill_remediation_plan>
+Produce the `<remediation_plan>` section immediately after `<open_questions>`.
+Phase the top recommendations from `<prioritized_recommendations>` by tier:
+  - Phase 1 = critical findings + any blocking structural violations (fix before sharing)
+  - Phase 2 = major findings (fix before v1.0)
+  - Phase 3 = minor findings + polish (fix when convenient)
+  - Phase 4 = informational + ongoing monitoring items
+Omit any phase that has no items.
+Use the same concise action descriptions as the ranked table — do not rewrite them.
+</fill_remediation_plan>
+
 <!-- INCOMPLETE COVERAGE — CONDITIONALLY APPENDED -->
 <append_incomplete_coverage>
 If `incomplete_roles` is non-empty:
@@ -256,20 +274,40 @@ Deliver the completed synthesis document in two forms.
 Print the full synthesis document to terminal as rendered markdown. This allows the user
 to read the result inline without opening a file.
 
-**Step 2 — Write to file:**
+**Step 2 — Write to file using the `write` tool:**
 Compute the output filename:
-```bash
-OUTFILE="$(pwd)/expert-opinion-$(date +%Y-%m-%d-%H%M).md"
+```
+OUTFILE = "{cwd}/expert-opinion-{YYYY-MM-DD-HHmm}.md"
 ```
 
-Write the synthesis document to this file:
-```bash
-cat > "$OUTFILE" << 'SYNTHESIS_EOF'
-[full synthesis document content]
-SYNTHESIS_EOF
+Use the **`write` tool** (NOT bash heredoc) to write the synthesis document:
+```
+write(path: OUTFILE, content: <full synthesis document as string>)
 ```
 
-**Step 3 — Confirm delivery:**
+The `write` tool handles arbitrary content — no delimiter collision possible.
+Do NOT use `cat > "$OUTFILE" << 'SYNTHESIS_EOF'` or any heredoc pattern.
+
+**Write-failure handling:** If the `write` tool returns an error or throws an exception:
+- Output: "WARNING (synthesis/phase-4): File write failed — the synthesis document was rendered to terminal above. Copy the terminal output to preserve your results. To retry: call `write(path: OUTFILE, content: <full synthesis doc>)` with the same content."
+- Do NOT skip Steps 3 and 4 — append `<run_metadata>` inline to the terminal output if the file could not be written.
+
+**Step 3 — Append `<run_metadata>` section:**
+After the synthesis body, append the following section to the written file:
+
+```
+<run_metadata>
+skill_version: "0.3.0"
+roles_dispatched: [comma-separated list of role names]
+completed_roles: {completed_roles}/{total_roles}
+failed_roles: {failed_roles list, or "none"}
+timed_out_roles: {timed_out_roles list, or "none"}
+run_date: {YYYY-MM-DD}
+estimated_token_cost: "~{N * avg_tokens_per_role} tokens ({N} roles × ~{avg} tokens each)"
+</run_metadata>
+```
+
+**Step 4 — Confirm delivery:**
 Output this exact confirmation line (substituting the actual filename):
 "Synthesis complete. Audit document saved to: ./expert-opinion-{YYYY-MM-DD-HHmm}.md"
 
