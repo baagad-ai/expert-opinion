@@ -40,7 +40,7 @@ gh release view v1.0.0 --repo baagad-ai/expert-opinion
 
 ## Tasks
 
-- [ ] **T01: Write validate.sh, CHANGELOG.md, and bump version to 1.0.0** `est:45m`
+- [x] **T01: Write validate.sh, CHANGELOG.md, and bump version to 1.0.0** `est:45m`
   - Why: Creates the validation gate and release prep files; validate.sh must pass locally before anything is pushed
   - Files: `scripts/validate.sh`, `CHANGELOG.md`, `pyproject.toml`
   - Do: Write `scripts/validate.sh` with the 17 checks defined in the research doc (SKILL.md existence/line count, required XML tags, workflow path resolution, required_reading path resolution, template files, reference files, examples structure, README, CONTRIBUTING). Run `bash scripts/validate.sh` — must exit 0. Write `CHANGELOG.md` with a single v1.0.0 entry listing the three milestone pillars. Change `pyproject.toml` version from `0.1.0` to `1.0.0`. Commit all three files with message `chore(release): v1.0.0 — scripts/validate.sh, CHANGELOG.md, version bump`.
