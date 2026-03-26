@@ -4,7 +4,7 @@
   templates/role-proposal.md — role proposal display format used in Phase 4
 </required_reading>
 
-<workflow name="intake" version="1.0">
+<workflow name="intake" version="1.1">
 
 <purpose>
 Six-phase intake orchestration. Accepts any input type (text, file, codebase, or URL), normalizes it, infers context, proposes expert roles, gates on user confirmation, and emits the typed output package consumed by workflows/research.md in S02.
@@ -166,9 +166,7 @@ Repeat one block per proposed role. After all role blocks, include the confirmat
 <phase id="5" name="User confirmation gate">
 Present the role proposal to the user and gate on their confirmation before any research begins.
 
-**Primary path — ask_user_questions available:**
-
-Invoke `ask_user_questions` with:
+Call the `ask_user_questions` tool now with these exact parameters. Do not output the options as text. Do not render this as a markdown list. The tool call is mandatory — do not skip it.
 - Question: "Review the expert roles proposed above. What would you like to do?"
 - Options:
   - "Confirm all"
@@ -182,15 +180,11 @@ If the user selects **"Edit (describe changes)"**:
 - Apply the described edits to the role list.
 - **Zero-role guard:** Before re-rendering, check: if the edit would result in zero confirmed roles, do NOT proceed. Output: "No expert roles remain after these edits. Please add at least one role, or select 'Cancel' to abort." Re-present the edit prompt.
 - Re-render the updated role proposal (same format as Phase 4) — only if at least one role remains.
-- Re-present via `ask_user_questions` with the same three options.
-- Loop until the user confirms or cancels.
+- Call `ask_user_questions` again with the same three options. Loop until the user confirms or cancels.
 
 If the user selects **"Cancel"**:
 - Stop. Output: "Expert review cancelled. No analysis will run."
 - Do not emit an output package.
-
-**Fallback — ask_user_questions unavailable:**
-Present the role proposal as markdown and ask the user to reply with A, B, or C as described in the confirmation prompt from templates/role-proposal.md. Apply the same confirm/edit/cancel logic based on their reply.
 </phase>
 
 <phase id="6" name="Emit output package">
