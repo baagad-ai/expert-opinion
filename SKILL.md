@@ -1,5 +1,6 @@
 ---
 name: expert-opinion
+version: "1.0.0"
 description: >
   Use when you want multi-expert parallel review of any artifact — code, documents,
   architecture plans, business proposals, agentic skills, or any URL. Proposes expert
@@ -33,6 +34,8 @@ description: >
     Role identification is pure in-context LLM inference from the artifact content.
     No web searches during intake. fetch_page is permitted only to read a submitted URL
     (the artifact itself) — never for supplementary research or role selection.
+    Loading local reference files (e.g., `skill-audit-roles.md` via the `read` tool) is
+    permitted; this principle prohibits external network requests only.
   </no_web_search_in_intake>
 
   <skill_audit_specialization>
@@ -74,10 +77,29 @@ description: >
   **Step 0 — SKILL.md pre-check (for potential skill-audit routes only):**
   If the input looks like a directory path (ends with `/`, is a bare word, or user says
   "audit this skill"):
-    Run: `bash find {skill_path} -maxdepth 1 -name "SKILL.md" | head -1`
-    (where `{skill_path}` is the path provided by the user — substitute before executing)
-    - If SKILL.md found → continue to Step 1.
-    - If SKILL.md NOT found → route to intake (Step 2) immediately.
+
+    **Path validation — reject shell metacharacters before any bash execution:**
+    Check the user-supplied input against this allowlist: `[a-zA-Z0-9_./ -]` — alphanumerics,
+    dots, hyphens, underscores, forward-slashes, spaces only.
+    If the input contains any other character (`;`, `&`, `$`, `(`, `)`, `|`, `` ` ``, `!`, `*`,
+    `?`, `{`, `}`, `\`):
+      STOP immediately: "ERROR (routing/step-0): Invalid path — contains disallowed characters."
+      Do NOT run any bash command. Do NOT proceed.
+
+    **Multi-directory resolution loop (for bare-word inputs without a path separator):**
+    If the input starts with `/`, `./`, `../`, or `~/`: treat as a literal path (`SKILL_PATH="{input}"`).
+    Otherwise (bare word), probe candidate directories in this order:
+      1. `./.agents/skills/{input}/`
+      2. `~/.claude/skills/{input}/`
+      3. `~/.agents/skills/{input}/`
+      4. Current working directory: `./{input}/`
+
+    For each candidate, run (note: path is always double-quoted):
+    ```bash
+    find "$SKILL_PATH" -maxdepth 1 -name "SKILL.md" | head -1
+    ```
+    - First candidate that returns a non-empty path → use that `SKILL_PATH`, continue to Step 1.
+    - If ALL candidates return empty → route to intake (Step 2) immediately.
       Do NOT load any `audit-skill.md` required-reading files.
 
   **Step 1 — Skill audit route:**
@@ -93,4 +115,12 @@ description: >
   **Ambiguity:** If a path could be a skill directory or a general codebase:
   Ask: "Is this a skill directory or a general codebase?"
   Then route based on the answer.
+
+  <file_map>
+    Workflow files and their purposes (all four must be present for a complete skill):
+    - workflows/intake.md      — general artifact intake: detect input type, normalize, propose roles, confirm, emit IntakeOutputPackage
+    - workflows/research.md    — parallel expert dispatch: validate package, construct per-role tasks, fan-out subagents, collect reports, emit ResearchOutputPackage
+    - workflows/synthesis.md   — synthesis: convergence + contradiction scan, severity aggregation, maturity scoring, fill template, deliver dual output
+    - workflows/audit-skill.md — skill audit pipeline: S01 structural pre-validation + intake, S02 parallel expert dispatch, S03 synthesis with maturity scorecard
+  </file_map>
 </routing_decision>

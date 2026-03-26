@@ -17,6 +17,8 @@ interface IntakeOutputPackage {
   confirmed_roles: ConfirmedRole[];
   normalized_input: NormalizedInput;
   inferred_context: InferredContext;
+  data_classification?: "UNCLASSIFIED" | "INTERNAL" | "CONFIDENTIAL" | "RESTRICTED"; // Optional — user-selected classification from intake Phase 1
+  input_content_hash?: string;    // Optional — SHA-256 hex digest of normalized_input.content for auditability
 }
 
 interface ConfirmedRole {
@@ -153,4 +155,45 @@ Consumers MUST check the `schema_version` at the top of this file. If a consumer
 ```
 WARNING (output-contract): consumer built against schema 1.0, current schema is {Y}.
 Check for removed or renamed fields before proceeding.
+```
+
+---
+
+## Breaking vs. Non-Breaking Contract Changes
+
+**Breaking changes** (require major version bump — all consumers must update before deploying):
+- Removing any field that is currently required
+- Renaming any existing field
+- Changing the type of any existing field
+- Adding a new required field (consumers will fail on missing field)
+- Changing a field from optional (`?`) to required
+
+**Non-breaking changes** (minor version bump — existing consumers continue to work):
+- Adding a new optional field (`?`) with a documented default or omission behavior
+- Adding a new allowed value to a string literal union, if consumers handle unknown values gracefully
+- Adding informational fields to `run_metadata` or `inferred_context`
+
+**Version bump convention:**
+- Major bump (e.g. `1.0` → `2.0`): breaking change — update `schema_version` in this file AND in all consuming workflow phases
+- Minor bump (e.g. `1.0` → `1.1`): non-breaking — update `schema_version`; existing consumers continue to function
+
+**Migration guide template** (include in the `Changelog` section when bumping):
+
+```
+## Migration: schema {X.Y} → {X+1.0}
+
+### Removed fields
+- `old_field_name` (was in `InterfaceName`) — replace with `new_field_name` or derive from `{other_field}`
+
+### Added required fields
+- `new_field_name: type` (in `InterfaceName`) — populate from `{source}`; backwards-compat default: `{default}`
+
+### Changed fields
+- `existing_field` type changed from `{old_type}` to `{new_type}` — update consumers to cast/coerce
+
+### Consumer update checklist
+- [ ] Update `schema_version` check in consuming workflow
+- [ ] Update field references in workflows/research.md
+- [ ] Update field references in workflows/synthesis.md
+- [ ] Re-run scripts/validate.sh to confirm check 20 still passes
 ```

@@ -191,10 +191,23 @@ After emitting the package, state:
 Pass this ResearchOutputPackage to workflows/synthesis.md (S03) to begin synthesis."
 
 If `completed_roles < total_roles`, also state:
-"WARNING: [total_roles - completed_roles] subagent(s) returned no output.
-To retry failed roles only: extract entries from `metadata.failed_roles`, re-dispatch those roles
-using the same IntakeOutputPackage, and merge new reports into this ResearchOutputPackage before
-proceeding to synthesis. This is cheaper than re-running the full pipeline."
+"WARNING: [total_roles - completed_roles] subagent(s) returned no output."
+
+Then output this executable 5-step recovery procedure:
+
+---
+**Partial-Retry Recovery Procedure:**
+1. **Filter** — Extract the failed role entries: select all entries from `IntakeOutputPackage.confirmed_roles` where `role` matches any name in `metadata.failed_roles`.
+2. **Reconstruct** — Re-construct subagent task strings for those roles only, using the same `IntakeOutputPackage` and the same template from `references/subagent-prompt.md`. Do NOT generate new tasks — reuse the identical inputs verbatim.
+3. **Dispatch with classified backoff** — Classify the failure before re-dispatching:
+   - **Rate-limit timeout** (subagent returned a rate-limit error or HTTP 429): wait 5 seconds, then dispatch.
+   - **Process/network timeout** (no output returned within 120s): re-dispatch immediately — no backoff needed.
+   - Dispatch recovered tasks in parallel (same `subagent` parallel mode call, `tasks: [...]`).
+4. **Merge** — Insert each recovered report at its original index in the `reports` array (replacing the absent slot). Update `metadata.completed_roles` and remove the role from `metadata.failed_roles`. Do NOT append to the end.
+5. **Re-validate** — Run the `missing_sections` structural section check (from Phase 4 step 4) on each recovered report. Record incomplete sections in `missing_sections` as before.
+
+Proceed to synthesis (`workflows/synthesis.md`) only after merge and re-validation are complete. This procedure is cheaper than re-running the full pipeline.
+---
 </phase>
 
 </workflow>

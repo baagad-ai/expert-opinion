@@ -19,6 +19,25 @@ If the stripped input is empty (length == 0 after stripping), STOP immediately:
 "No input provided. Please paste content, provide a file path, a directory path, or a URL."
 Do not proceed to detection or any downstream phase.
 
+**Data classification notice (display before processing any content):**
+Before detecting the input type, inform the user of appropriate handling requirements:
+
+> **Data Classification Required**
+> Before submitting content for expert review, select the classification level that applies:
+> - **UNCLASSIFIED** — Public information; no handling restrictions.
+> - **INTERNAL** — Internal use only; do not share outputs externally.
+> - **CONFIDENTIAL** — Contains sensitive business or technical information; limit output distribution.
+> - **RESTRICTED** — Contains PII, credentials, or regulated data; handle per your organization's policy.
+>
+> If the submitted content contains PII (names, emails, IDs), credentials, or regulated data,
+> classify as RESTRICTED and redact sensitive values before submitting.
+
+Invoke `ask_user_questions` with:
+- Question: "What is the data classification of the content you're submitting?"
+- Options: "UNCLASSIFIED", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"
+
+Record the user's selection as `data_classification`. Proceed regardless of selection — this is informational.
+
 Apply the detection rules from references/input-handling.md in order (first match wins):
 <!-- NOTE: The rules below duplicate references/input-handling.md for inline executability.
      input-handling.md is the canonical source — if there is any discrepancy between the
@@ -207,7 +226,9 @@ Populate all required fields:
     "purpose": "What the artifact is trying to accomplish.",
     "domain": "Technical or business domain.",
     "audience": "Who the artifact is for."
-  }
+  },
+  "data_classification": "UNCLASSIFIED",
+  "input_content_hash": "sha256:{hex_digest_of_normalized_input_content}"
 }
 ```
 

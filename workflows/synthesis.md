@@ -277,7 +277,10 @@ to read the result inline without opening a file.
 **Step 2 — Write to file using the `write` tool:**
 Compute the output filename:
 ```
-OUTFILE = "{cwd}/expert-opinion-{YYYY-MM-DD-HHmm}.md"
+artifact_slug = slugify(inferred_context.purpose)  // lowercase, spaces→hyphens, strip non-alphanumeric, max 40 chars
+                                                    // e.g. "REST API auth module" → "rest-api-auth-module"
+                                                    // Fallback when inferred_context.purpose is absent: "expert-opinion-review"
+OUTFILE = "{cwd}/{artifact_slug}-{YYYY-MM-DD-HHmm}.md"
 ```
 
 Use the **`write` tool** (NOT bash heredoc) to write the synthesis document:
@@ -297,7 +300,10 @@ After the synthesis body, append the following section to the written file:
 
 ```
 <run_metadata>
-skill_version: "0.3.0"
+run_id: "{uuid4}"  (generate a fresh UUID4 at the start of Phase 4)
+run_timestamp: "{ISO-8601 datetime with timezone, e.g. 2026-03-26T14:30:00+05:30}"
+environment: "local"  (override with "dev" or "prod" when known from execution context)
+skill_version: "{skill_version}"  (resolve from `version` field in the expert-opinion SKILL.md frontmatter; emit "unknown" if field absent)
 roles_dispatched: [comma-separated list of role names]
 completed_roles: {completed_roles}/{total_roles}
 failed_roles: {failed_roles list, or "none"}
@@ -309,7 +315,7 @@ estimated_token_cost: "~{N * avg_tokens_per_role} tokens ({N} roles × ~{avg} to
 
 **Step 4 — Confirm delivery:**
 Output this exact confirmation line (substituting the actual filename):
-"Synthesis complete. Audit document saved to: ./expert-opinion-{YYYY-MM-DD-HHmm}.md"
+"Synthesis complete. Audit document saved to: ./{artifact_slug}-{YYYY-MM-DD-HHmm}.md"
 
 The pipeline is complete. The audit document is the canonical deliverable.
 </phase>

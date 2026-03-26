@@ -180,3 +180,41 @@ against version `X` and this file declares version `Y > X`, emit a structured wa
 WARNING (skill-audit-contract): consumer built against schema 1.0, current schema is {Y}.
 Check for removed or renamed fields before proceeding.
 ```
+
+---
+
+## Breaking vs. Non-Breaking Contract Changes
+
+**Breaking changes** (require major version bump — all consumers must update):
+- Removing any field that is currently required
+- Renaming any existing field
+- Changing the type of any existing field
+- Adding a new required field (consumers will fail on missing field)
+- Changing a field from optional (`?`) to required
+
+**Non-breaking changes** (minor version bump — existing consumers continue to work):
+- Adding a new optional field (`?`) with a documented default or omission behavior
+- Adding informational fields to `SkillAuditMetadata`
+- Adding a new `complexity_tier` or `maturity_estimate` value, if consumers handle unknown enum values
+
+**Version bump convention:**
+- Major bump (e.g. `1.0` → `2.0`): breaking change — update `schema_version` in this file AND in all consuming phases (S02-1 pre-hook, S03-1 pre-hook)
+- Minor bump (e.g. `1.0` → `1.1`): non-breaking — update `schema_version`; existing consumers continue to function
+
+**Migration guide template** (include in the `Changelog` section when bumping):
+
+```
+## Migration: schema {X.Y} → {X+1.0}
+
+### Removed fields
+- `old_field_name` (was in `InterfaceName`) — replace with `new_field_name` or derive from `{other_field}`
+
+### Added required fields
+- `new_field_name: type` (in `InterfaceName`) — populate from `{source}`; backwards-compat default: `{default}`
+
+### Consumer update checklist
+- [ ] Update `schema_version` check in audit-skill.md S02-1 pre-hook
+- [ ] Update `schema_version` check in audit-skill.md S03-1 pre-hook
+- [ ] Update field references in workflows/audit-skill.md
+- [ ] Re-run scripts/validate.sh
+```
