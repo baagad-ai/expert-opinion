@@ -3,7 +3,7 @@
   templates/synthesis-doc.md — structural contract Phase 3 fills section-by-section; render in the order the template defines
 </required_reading>
 
-<workflow name="synthesis" version="1.0">
+<workflow name="synthesis" version="1.1">
 
 <purpose>
 Four-phase synthesis orchestration. Accepts the `ResearchOutputPackage` emitted by
@@ -157,22 +157,22 @@ sections. Do not skip sections (except `<contradictions>` per its own rule).
 
 <!-- OVERVIEW -->
 <fill_overview>
-Produce an `<overview>` block with these fields:
+Fill the `## Overview` section of the template with these values:
 
-- artifact: from `inferred_context.purpose` — what artifact was reviewed (be specific)
-- scope: derive from the union of all expert domains in `reports` (e.g. "security, performance, API design")
-- experts_consulted: comma-separated list of `report.role` values from all entries in `reports`
-- review_date: today's date in YYYY-MM-DD format
-- overall_risk: the highest severity tier present across all findings from the severity aggregation
+- **Artifact:** from `inferred_context.purpose` — what artifact was reviewed (be specific)
+- **Scope:** derive from the union of all expert domains in `reports` (e.g. "security, performance, API design")
+- **Experts consulted:** comma-separated list of `report.role` values from all entries in `reports`
+- **Review date:** today's date in YYYY-MM-DD format
+- **Overall risk:** the highest severity tier present across all findings from the severity aggregation
   (critical > high > medium > low; map: critical→critical, major→high, minor→medium, informational→low)
-- one_line_verdict: a single sentence synthesizing the dominant cross-cutting signal;
+- **Verdict:** a single sentence synthesizing the dominant cross-cutting signal;
   if `cross_findings` is non-empty, derive from the top cross-cutting finding;
   otherwise derive from the highest-severity single-expert finding
 </fill_overview>
 
 <!-- PER ROLE HIGHLIGHTS -->
 <fill_per_role_highlights>
-Produce one table row per entry in `reports`:
+Fill the `## Per-Role Highlights` table. Produce one row per entry in `reports`:
 
 | Role | 1-Sentence Finding | Highest Severity |
 |------|--------------------|-----------------|
@@ -188,28 +188,34 @@ Include all reports, including those in `incomplete_roles` (mark them with "(par
 
 <!-- CROSS CUTTING FINDINGS -->
 <fill_cross_cutting_findings>
-Produce the `<cross_cutting_findings>` section.
+Fill the `## Cross-Cutting Findings` section.
 
 If `cross_findings` is non-empty:
-  For each entry, produce one `<cross_finding>` block with id, raised_by, finding, why_it_matters.
+  For each entry, produce one `### Xn — [brief descriptive title]` block containing:
+  - **Raised by:** [role names]
+  - **Finding:** [synthesized description]
+  - **Why it matters:** [combined impact]
 
 If `cross_findings` is empty:
-  Write exactly this inside the section: "No cross-cutting findings identified."
+  Replace the entire section body with: "No cross-cutting findings identified."
 </fill_cross_cutting_findings>
 
 <!-- CONTRADICTIONS — CONDITIONALLY INCLUDED -->
 <fill_contradictions>
 If `contradictions` is non-empty:
-  Produce the `<contradictions>` section with one `<contradiction>` block per entry.
+  Fill the `## Contradictions` section. For each contradiction produce a `### [topic]` block with:
+  - **[Role A] says:** [position]
+  - **[Role B] says:** [position]
+  - **Resolution:** [adopted view and rationale, or 'unresolved — needs domain owner input']
 
 If `contradictions` is empty:
-  OMIT THE ENTIRE `<contradictions>` SECTION. Do not write the tag at all.
-  Do not write "No contradictions." — simply skip it.
+  OMIT THE ENTIRE `## Contradictions` SECTION including the heading.
+  Do not write "No contradictions." — simply omit it.
 </fill_contradictions>
 
 <!-- PRIORITIZED RECOMMENDATIONS -->
 <fill_prioritized_recommendations>
-Produce the `<prioritized_recommendations>` section as a ranked table.
+Fill the `## Prioritized Recommendations` ranked table.
 
 Ranking rules (apply in order):
 1. Cross-cutting findings (X-refs) rank above single-expert findings of equal severity.
@@ -229,7 +235,7 @@ where N is the count of omitted rows.
 
 <!-- OPEN QUESTIONS -->
 <fill_open_questions>
-Produce the `<open_questions>` section.
+Fill the `## Open Questions` section.
 
 If `merged_open_questions` is non-empty:
   List each question in the format:
@@ -241,8 +247,8 @@ If `merged_open_questions` is empty:
 
 <!-- REMEDIATION PLAN -->
 <fill_remediation_plan>
-Produce the `<remediation_plan>` section immediately after `<open_questions>`.
-Phase the top recommendations from `<prioritized_recommendations>` by tier:
+Fill the `## Remediation Plan` section.
+Phase the top recommendations from the ranked table by tier:
   - Phase 1 = critical findings + any blocking structural violations (fix before sharing)
   - Phase 2 = major findings (fix before v1.0)
   - Phase 3 = minor findings + polish (fix when convenient)
@@ -254,14 +260,11 @@ Use the same concise action descriptions as the ranked table — do not rewrite 
 <!-- INCOMPLETE COVERAGE — CONDITIONALLY APPENDED -->
 <append_incomplete_coverage>
 If `incomplete_roles` is non-empty:
-  Append an `<incomplete_coverage>` block immediately after `</open_questions>`:
-
-  <incomplete_coverage>
-  [Paste the prose prepared in Phase 2 incomplete_coverage_prep here]
-  </incomplete_coverage>
+  Append the prose prepared in Phase 2 `incomplete_coverage_prep` immediately after the
+  `## Open Questions` section as a new `## Incomplete Coverage` section.
 
 If `incomplete_roles` is empty:
-  Do not add this block.
+  Do not add this section.
 </append_incomplete_coverage>
 
 The complete synthesis document is now assembled. Proceed to Phase 4.
@@ -295,23 +298,25 @@ Do NOT use `cat > "$OUTFILE" << 'SYNTHESIS_EOF'` or any heredoc pattern.
 - Output: "WARNING (synthesis/phase-4): File write failed — the synthesis document was rendered to terminal above. Copy the terminal output to preserve your results. To retry: call `write(path: OUTFILE, content: <full synthesis doc>)` with the same content."
 - Do NOT skip Steps 3 and 4 — append `<run_metadata>` inline to the terminal output if the file could not be written.
 
-**Step 3 — Append `<run_metadata>` section:**
+**Step 3 — Append `## Run Metadata` section:**
 After the synthesis body, append the following section to the written file:
 
-```
-<run_metadata>
-run_id: "{uuid4}"  (generate a fresh UUID4 at the start of Phase 4)
+````markdown
+## Run Metadata
+
+```yaml
+run_id: "{uuid4}"
 run_timestamp: "{ISO-8601 datetime with timezone, e.g. 2026-03-26T14:30:00+05:30}"
-environment: "local"  (override with "dev" or "prod" when known from execution context)
-skill_version: "{skill_version}"  (resolve from `version` field in the expert-opinion SKILL.md frontmatter; emit "unknown" if field absent)
+environment: "local"
+skill_version: "{skill_version}"
 roles_dispatched: [comma-separated list of role names]
-completed_roles: {completed_roles}/{total_roles}
-failed_roles: {failed_roles list, or "none"}
-timed_out_roles: {timed_out_roles list, or "none"}
-run_date: {YYYY-MM-DD}
+completed_roles: "{completed_roles}/{total_roles}"
+failed_roles: "{failed_roles list, or 'none'}"
+timed_out_roles: "{timed_out_roles list, or 'none'}"
+run_date: "{YYYY-MM-DD}"
 estimated_token_cost: "~{N * avg_tokens_per_role} tokens ({N} roles × ~{avg} tokens each)"
-</run_metadata>
 ```
+````
 
 **Step 4 — Confirm delivery:**
 Output this exact confirmation line (substituting the actual filename):

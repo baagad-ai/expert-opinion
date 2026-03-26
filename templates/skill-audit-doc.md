@@ -11,21 +11,20 @@
        5. BUILD REMEDIATION PLAN — phase the top recommendations by effort and dependency.
 -->
 
-<overview>
-skill_name: "[Skill name from YAML frontmatter]"
-skill_path: "[Path to skill root directory]"
-complexity_tier: "simple | router | enterprise"
-experts_consulted: "[Comma-separated list of roles]"
-review_date: "[YYYY-MM-DD]"
-overall_risk: "critical | high | medium | low"
-  <!-- critical: ship-blocking issues — do not use in production
-       high: significant issues — fix before broader rollout
-       medium: notable gaps — usable now, improve soon
-       low: minor polish — safe for production use -->
-one_line_verdict: "[Single sentence verdict on the skill's current state.]"
-</overview>
+## Overview
 
-<structural_health>
+**Skill:** [Skill name from YAML frontmatter]
+**Path:** [Path to skill root directory]
+**Complexity tier:** simple | router | enterprise
+**Experts consulted:** [Comma-separated list of roles]
+**Review date:** [YYYY-MM-DD]
+**Overall risk:** critical | high | medium | low
+**Verdict:** [Single sentence verdict on the skill's current state.]
+
+---
+
+## Structural Health
+
 <!-- Pre-validation results from the StructuralScan. Fill from SkillAuditIntakePackage.structural_scan. -->
 
 | Check | Result | Detail |
@@ -39,129 +38,161 @@ one_line_verdict: "[Single sentence verdict on the skill's current state.]"
 | User input accepted | ✅ / ❌ | [intake phase or ask_user_questions present] |
 | External service calls | ✅ / ❌ | [which tools] |
 
-Structural violations detected:
-<!-- List each StructuralViolation. If none, write: "No structural violations detected." -->
-- [severity] [rule]: [detail] in [file]
-</structural_health>
+**Structural violations detected:**
 
-<maturity_scorecard>
+<!-- List each StructuralViolation below. If none, write: "No structural violations detected." -->
+- [severity] [rule]: [detail] in [file]
+
+---
+
+## Maturity Scorecard
+
 <!-- 5-dimension quantitative scorecard. Each dimension scored 1–5.
-     Scores are aggregated from expert <dimension_scores> blocks.
-     When multiple experts score the same dimension, use the weighted average (weight by confidence_score).
-     Overall maturity = mean of the 5 dimension scores, rounded to 1 decimal.
-     Maturity tier: 4.0–5.0 = production-ready; 3.0–3.9 = v1-ready; 2.0–2.9 = prototype; 1.0–1.9 = deficient -->
+     Scores aggregated from expert dimension_scores blocks.
+     When multiple experts score the same dimension, use weighted average (weight = confidence_score).
+     Overall maturity = mean of the non-N/A dimension scores, rounded to 1 decimal.
+     Maturity tier: 4.0–5.0 = production-ready; 3.0–3.9 = v1-ready; 2.0–2.9 = prototype; <2.0 = deficient
+     Mark single-expert dimensions with * in the Score column. -->
 
 | Dimension | Score (1–5) | Scored By | Key Evidence |
 |-----------|-------------|-----------|--------------|
-| Prompt Clarity | [score] | [Prompt Architect] | [1-sentence finding] |
-| Workflow Robustness | [score] | [Agentic Workflow Designer] | [1-sentence finding] |
-| Security Posture | [score] | [Security & Injection Auditor] | [1-sentence finding] |
-| Quality Coverage | [score] | [Quality & Coverage Analyst] | [1-sentence finding] |
-| Enterprise Readiness | [score] | [Enterprise Readiness Auditor] | [1-sentence finding] |
+| Prompt Clarity | [score] | [Prompt Architect, Cognitive Load Analyst] | [1-sentence summary of evidence] |
+| Workflow Robustness | [score] | [Agentic Workflow Designer, Output Contract Reviewer] | [1-sentence summary] |
+| Security Posture | [score] | [Security & Injection Auditor] | [1-sentence summary] |
+| Quality Coverage | [score] | [Quality & Coverage Analyst] | [1-sentence summary] |
+| Enterprise Readiness | [score] | [Enterprise Readiness Auditor] | [1-sentence summary] |
 
 **Overall Maturity Score: [X.X] / 5.0**
 **Maturity Tier: [production-ready | v1-ready | prototype | deficient]**
 
-<!-- If a dimension has no expert coverage (role not in the panel), mark score as "N/A" and note
-     which role would be needed to assess it. -->
-</maturity_scorecard>
+---
 
-<per_role_highlights>
-<!-- One row per expert. 1-sentence finding is the expert's most important signal.
-     Severity = highest-severity finding that expert raised.
-     Confidence = expert's self-reported confidence_score. -->
+## Per-Role Highlights
 
 | Role | 1-Sentence Finding | Highest Severity | Confidence |
 |------|--------------------|-----------------|------------|
 | [Role 1] | [Most important finding in plain language] | critical/major/minor/informational | [0.0–1.0] |
 | [Role 2] | [...] | [...] | [...] |
-<!-- Add rows for each expert consulted. Mark partial reports with "(partial)" after the role name. -->
-</per_role_highlights>
 
-<cross_cutting_findings>
+---
+
+## Cross-Cutting Findings
+
 <!-- Issues raised independently by 2+ experts. Highest-confidence findings.
-     If none: "No cross-cutting findings identified." -->
+     If no cross-cutting findings: replace this entire block with
+     "No cross-cutting findings identified." -->
 
-<cross_finding>
-id: X1
-raised_by: "[Role A, Role B]"
-finding: "[Synthesized description — combine observations without pasting either verbatim]"
-why_it_matters: "[Combined impact — may exceed what either expert stated alone]"
-</cross_finding>
+### X1 — [Brief descriptive title]
 
-<!-- Add more <cross_finding> blocks as needed -->
-</cross_cutting_findings>
+**Raised by:** [Role A, Role B]
 
-<contradictions>
+**Finding:** [Synthesized description — combine observations without pasting either verbatim]
+
+**Why it matters:** [Combined impact — may exceed what either expert stated alone]
+
+---
+
+<!-- Add more ### Xn — [title] blocks as needed. -->
+
+---
+
+## Contradictions
+
 <!-- Cases where experts disagree on severity, approach, or interpretation.
-     Surface the tension; explain which view the synthesis adopts.
-     Omit this ENTIRE section if there are no contradictions. -->
+     IMPORTANT: Omit this ENTIRE section — heading included — if there are no contradictions.
+     Do not write "No contradictions." — simply omit the heading and all content below it. -->
 
-<contradiction>
-topic: "[What the disagreement concerns]"
-expert_a: "[Role A] says: [their position in one clause]"
-expert_b: "[Role B] says: [their position in one clause]"
-resolution: "[Which view this synthesis adopts and the one-sentence rationale, OR
-             'unresolved — needs domain owner input']"
-</contradiction>
-</contradictions>
+### [Topic of disagreement]
 
-<prioritized_recommendations>
+- **[Role A] says:** [their position in one clause]
+- **[Role B] says:** [their position in one clause]
+- **Resolution:** [Which view this synthesis adopts and why, OR 'unresolved — needs domain owner input']
+
+---
+
+## Prioritized Recommendations
+
 <!-- Single ranked list across ALL expert reports.
      Ranking: cross-cutting findings first, then by impact × urgency ÷ effort.
      Tier order: critical → major → minor → informational.
      Source format: RoleName:F-id or RoleName:X1 for cross-cutting.
-     Cap: 15 rows max. Note count of omitted items if truncated. -->
+     Cap: 15 rows max. Note count of omitted items below the table if truncated. -->
 
 | Rank | Recommendation | Source | Effort | Impact |
 |------|---------------|--------|--------|--------|
 | 1 | [Specific action — verb + object + outcome] | [Role:F1] | low/medium/high | [concrete impact] |
 | 2 | [...] | [...] | [...] | [...] |
-<!-- Continue for all actionable recommendations up to 15 -->
-</prioritized_recommendations>
 
-<remediation_plan>
-<!-- Phase the recommendations from <prioritized_recommendations> into a concrete fix schedule.
-     Phases are based on effort + dependency (blocking fixes first, polish last).
-     Each phase should be completable in a single focused session. -->
+---
+
+## Open Questions
+
+<!-- Unresolved questions from expert reports that require follow-up.
+     If no open questions: "No open questions." -->
+
+- [Question] — raised by [Role]; needs [specific information]
+
+---
+
+## Remediation Plan
+
+<!-- Phased fix schedule derived from Prioritized Recommendations.
+     Phase 1 = critical + blocking structural violations (fix before any use).
+     Phase 2 = major findings (fix before broader rollout).
+     Phase 3 = minor findings + structural minor violations (fix when convenient).
+     Phase 4 = informational + ongoing monitoring items.
+     Omit any phase with no items. -->
 
 **Phase 1 — Blockers (fix before any use)**
-Address these before the skill is shared or invoked in production:
-- [ ] [Recommendation N from prioritized list] — [expected outcome]
-- [ ] [Recommendation M from prioritized list] — [expected outcome]
-Estimated effort: [total hours or days]
+
+- [ ] [Recommendation from prioritized list] — [expected outcome]
+
+*Estimated effort: [total hours or days]*
 
 **Phase 2 — Quality (fix before broader rollout)**
-These improve correctness and robustness without blocking current use:
-- [ ] [Recommendation ...] — [expected outcome]
-Estimated effort: [...]
+
+- [ ] [Recommendation] — [expected outcome]
+
+*Estimated effort: [...]*
 
 **Phase 3 — Polish (fix when convenient)**
-Improvements that reduce friction or improve maintainability:
-- [ ] [Recommendation ...] — [expected outcome]
-Estimated effort: [...]
+
+- [ ] [Recommendation] — [expected outcome]
+
+*Estimated effort: [...]*
 
 **Phase 4 — Monitoring (ongoing)**
-Items that need periodic review rather than a one-time fix:
+
 - [ ] [Item] — [review cadence]
 
-<!-- If no blockers exist, omit Phase 1 entirely. Omit any phase with no items. -->
-</remediation_plan>
+---
 
-<open_questions>
-<!-- Unresolved questions from expert reports that require follow-up.
-     Format: "- [Question] — raised by [Role]; needs [what would resolve it]" -->
+## Incomplete Coverage
 
-- "[Question] — raised by [Role]; needs [specific information]"
-
-<!-- If no open questions: "No open questions." -->
-</open_questions>
-
-<incomplete_coverage>
 <!-- Roles that returned partial reports (missing_sections non-empty).
-     Omit this ENTIRE section if all reports are complete. -->
+     IMPORTANT: Omit this ENTIRE section — heading included — if all reports are complete. -->
 
 The following roles returned incomplete reports:
 - [Role]: missing [section names]
-Findings from these roles may be partial. Consider re-running with a complete report.
-</incomplete_coverage>
+
+Findings from these roles may be partial. Consider re-running those expert roles.
+
+---
+
+## Run Metadata
+
+```yaml
+run_id: "{uuid4}"
+run_timestamp: "{ISO-8601 datetime with timezone}"
+environment: "local"
+skill_version: "{skill_version}"
+skill_audited: "{skill_name}"
+roles_dispatched: [comma-separated list of role names]
+completed_roles: "{completed_roles}/{total_roles}"
+failed_roles: "none"
+timed_out_roles: "none"
+run_date: "{YYYY-MM-DD}"
+estimated_token_cost: "~{N} tokens ({N} roles × ~{avg} tokens each)"
+maturity_score: "{score}/5.0 ({tier})"
+overall_risk: "{risk}"
+```

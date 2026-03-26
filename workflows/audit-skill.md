@@ -5,7 +5,7 @@
   templates/skill-audit-doc.md — synthesis document template for S03
 </required_reading>
 
-<workflow name="audit-skill" version="1.0">
+<workflow name="audit-skill" version="1.1">
 
 <purpose>
 Enterprise-grade skill audit pipeline. Accepts a skill directory path, runs structural
@@ -575,21 +575,21 @@ Fill `templates/skill-audit-doc.md` section-by-section in order. Do not reorder.
 Use the analysis pass results from S03-1. Do not re-analyze while filling.
 
 Fill in this order:
-  1. `<overview>` — from inferred_context + overall_risk from severity aggregation
-  2. `<structural_health>` — from StructuralScan; populate the check table and violations list
-  3. `<maturity_scorecard>` — from Sub-step D; include computed scores + tier
-  4. `<per_role_highlights>` — one row per report; include confidence column
-  5. `<cross_cutting_findings>` — from cross_findings[]; "No cross-cutting findings identified." if empty
-  6. `<contradictions>` — from contradictions[]; OMIT ENTIRE SECTION if empty
-  7. `<prioritized_recommendations>` — from severity aggregation; cross-cutting first; max 15 rows
-  8. `<remediation_plan>` — phase the top recommendations:
+  1. `## Overview` — from inferred_context + overall_risk from severity aggregation
+  2. `## Structural Health` — from StructuralScan; populate the check table and violations list
+  3. `## Maturity Scorecard` — from Sub-step D; include computed scores + tier
+  4. `## Per-Role Highlights` — one row per report; include confidence column
+  5. `## Cross-Cutting Findings` — from cross_findings[]; "No cross-cutting findings identified." if empty
+  6. `## Contradictions` — from contradictions[]; OMIT ENTIRE SECTION INCLUDING HEADING if empty
+  7. `## Prioritized Recommendations` — from severity aggregation; cross-cutting first; max 15 rows
+  8. `## Remediation Plan` — phase the top recommendations:
        Phase 1 = critical findings + any blocking structural violations
        Phase 2 = major findings
        Phase 3 = minor findings + structural minor violations
        Phase 4 = informational + ongoing monitoring items
      Omit any phase with no items.
-  9. `<open_questions>` — from merged_open_questions[]; "No open questions." if empty
-  10. `<incomplete_coverage>` — from incomplete_roles; OMIT ENTIRE SECTION if all reports complete
+  9. `## Open Questions` — from merged_open_questions[]; "No open questions." if empty
+  10. `## Incomplete Coverage` — from incomplete_roles; OMIT ENTIRE SECTION INCLUDING HEADING if all reports complete
 </phase>
 
 <phase id="S03-3" name="Dual output delivery">
@@ -614,26 +614,28 @@ Do NOT use `cat > "$OUTFILE" << 'SYNTHESIS_EOF'` or any heredoc pattern.
 - Output: "WARNING (audit-skill/S03-3): File write failed — the audit document was rendered to terminal above. Copy the terminal output to preserve your results. To retry: call `write(path: OUTFILE, content: <full doc>)` with the same content."
 - Append `<run_metadata>` inline to the terminal output if the file could not be written.
 
-**Step 3 — Append `<run_metadata>` section:**
+**Step 3 — Append `## Run Metadata` section:**
 After the audit document body, append the following section to the written file:
 
-```
-<run_metadata>
-run_id: "{uuid4}"  (generate a fresh UUID4 at the start of S03-3)
+````markdown
+## Run Metadata
+
+```yaml
+run_id: "{uuid4}"
 run_timestamp: "{ISO-8601 datetime with timezone, e.g. 2026-03-26T14:30:00+05:30}"
-environment: "local"  (override with "dev" or "prod" when known from execution context)
-skill_version: "{skill_version}"  (resolve from `version` field in SKILL.md frontmatter loaded during S01-1; emit "unknown" if field absent)
+environment: "local"
+skill_version: "{skill_version}"
 skill_audited: "{skill_name}"
 roles_dispatched: [comma-separated list of role names]
-completed_roles: {completed_roles}/{total_roles}
-failed_roles: {failed_roles list, or "none"}
-timed_out_roles: {timed_out_roles list, or "none"}
-run_date: {YYYY-MM-DD}
+completed_roles: "{completed_roles}/{total_roles}"
+failed_roles: "{failed_roles list, or 'none'}"
+timed_out_roles: "{timed_out_roles list, or 'none'}"
+run_date: "{YYYY-MM-DD}"
 estimated_token_cost: "~{N * avg_tokens_per_role} tokens ({N} roles × ~{avg} tokens each)"
 maturity_score: "{score}/5.0 ({tier})"
 overall_risk: "{risk}"
-</run_metadata>
 ```
+````
 
 **Step 4 — Confirm delivery:**
 Output:
